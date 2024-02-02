@@ -6,19 +6,18 @@
 The Bytebot Node.js library provides access to the Bytebot API from JavaScript/TypeScript.
 
 ## API Docs
-You can find Bytebot's complete API docs at [docs.bytebot.ai](https://docs.bytebot.ai).
 
+You can find Bytebot's complete API docs at [docs.bytebot.ai](https://docs.bytebot.ai).
 
 ## Installation
 
 ```
-npm install --save bytebot
+npm install --save @bytebot/sdk
 # or
-yarn add bytebot
+yarn add @bytebot/sdk
 ```
 
 ## Usage
-
 
 ```typescript
 import { BytebotClient } from 'bytebot';
@@ -43,7 +42,7 @@ const bytebot = new BytebotClient({
 
   ...
 
-  
+
 })();
 
 ```
