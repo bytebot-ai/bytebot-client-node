@@ -24,6 +24,11 @@
     chalk "^2.4.2"
     js-tokens "^4.0.0"
 
+"@flatfile/cross-env-config@^0.0.5":
+  version "0.0.5"
+  resolved "https://registry.npmjs.org/@flatfile/cross-env-config/-/cross-env-config-0.0.5.tgz"
+  integrity sha512-4/hRTQ6BsD+CQKkrexcqd3wwIyRx7uilC0JOF6E0Q1K26/pgatuo1yBMO7Ofo3zs3ZqM5YISQps+0huggypMmg==
+
 "@puppeteer/browsers@1.9.1":
   version "1.9.1"
   resolved "https://registry.npmjs.org/@puppeteer/browsers/-/browsers-1.9.1.tgz"
