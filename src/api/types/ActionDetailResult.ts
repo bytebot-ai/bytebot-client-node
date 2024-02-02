@@ -5,4 +5,4 @@
 /**
  * The result of the action, which can be null, a string, or an array of dictionaries with string keys and values that are either strings or null
  */
-export type ActionDetailResult = null | string | Record<string, string | null>[];
+export type ActionDetailResult = string | Record<string, string | undefined>[];
