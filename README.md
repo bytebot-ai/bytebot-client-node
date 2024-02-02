@@ -1,1 +1,0 @@
-# bytebot-client-node
