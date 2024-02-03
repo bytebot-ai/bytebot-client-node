@@ -1,6 +1,6 @@
 README.md
 LICENSE
 
-wrapper/
+src/wrapper/
 test/
-index.ts
+src/index.ts
