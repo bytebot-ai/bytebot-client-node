@@ -20,7 +20,7 @@ yarn add @bytebot/sdk
 ## Usage
 
 ```typescript
-import { BytebotClient } from 'bytebot';
+import { BytebotClient } from '@bytebot/sdk';
 import puppeteer from 'puppeteer';
 
 const bytebot = new BytebotClient({

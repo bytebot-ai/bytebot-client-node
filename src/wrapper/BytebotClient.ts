@@ -11,6 +11,7 @@ import {
   assignAttribute,
   copyAttribute,
 } from "./ActionFunctions";
+import { BytebotInvalidActionError } from "./types/actionErrors";
 
 export declare namespace BytebotClient {
   interface Options {
@@ -83,7 +84,7 @@ export class BytebotClient {
       case "ExtractTable":
         return extractTable(actionOption, page);
       default:
-        throw new Error(`Action type ${actionOption.actionType} not supported`);
+        throw new BytebotInvalidActionError(actionOption.actionType);
     }
   }
 
