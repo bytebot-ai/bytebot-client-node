@@ -1,6 +1,6 @@
 # Bytebot Node Library
 
-[![npm shield](https://img.shields.io/npm/v/bytebot)](https://www.npmjs.com/package/bytebot)
+[![npm shield](https://img.shields.io/npm/v/@bytebot/sdk)](https://www.npmjs.com/package/@bytebot/sdk)
 [![fern shield](https://img.shields.io/badge/%F0%9F%8C%BF-SDK%20generated%20by%20Fern-brightgreen)](https://github.com/fern-api/fern)
 
 The Bytebot Node.js library provides access to the Bytebot API from JavaScript/TypeScript.
