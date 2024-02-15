@@ -1,7 +1,9 @@
 README.md
 LICENSE
 
+package.json
+package-lock.json
+
 src/wrapper/
 test/
 src/index.ts
-
