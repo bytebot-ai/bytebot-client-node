@@ -28,9 +28,9 @@ export class Actions {
      *
      * @example
      *     await bytebot.actions.generateActions({
-     *         url: "string",
-     *         html: "string",
-     *         prompt: "string"
+     *         url: "url",
+     *         html: "html",
+     *         prompt: "prompt"
      *     })
      */
     public async generateActions(
@@ -40,18 +40,18 @@ export class Actions {
         const _response = await core.fetcher({
             url: urlJoin(
                 (await core.Supplier.get(this._options.environment)) ?? environments.BytebotEnvironment.Default,
-                "v1/generate-actions"
+                "generate-actions"
             ),
             method: "POST",
             headers: {
                 "X-API-KEY": await core.Supplier.get(this._options.apiKey),
                 "X-Fern-Language": "JavaScript",
                 "X-Fern-SDK-Name": "@bytebot/sdk",
-                "X-Fern-SDK-Version": "0.0.20",
+                "X-Fern-SDK-Version": "0.0.21",
             },
             contentType: "application/json",
             body: request,
-            timeoutMs: requestOptions?.timeoutInSeconds != null ? requestOptions.timeoutInSeconds * 1000 : 60000,
+            timeoutMs: requestOptions?.timeoutInSeconds != null ? requestOptions.timeoutInSeconds * 1000 : 120000,
             maxRetries: requestOptions?.maxRetries,
         });
         if (_response.ok) {

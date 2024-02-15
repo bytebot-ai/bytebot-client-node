@@ -1,6 +1,6 @@
 {
     "name": "@bytebot/sdk",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "private": false,
     "repository": "https://github.com/bytebot-ai/bytebot-client-node",
     "license": "MIT",
@@ -12,7 +12,7 @@
         "prepack": "cp -rv dist/. ."
     },
     "dependencies": {
-        "@flatfile/cross-env-config": "0.0.5",
+        "@flatfile/cross-env-config": "^0.0.5",
         "form-data": "4.0.0",
         "node-fetch": "2.7.0",
         "puppeteer": "21.9.0",

@@ -5,9 +5,9 @@
 /**
  * @example
  *     {
- *         url: "string",
- *         html: "string",
- *         prompt: "string"
+ *         url: "url",
+ *         html: "html",
+ *         prompt: "prompt"
  *     }
  */
 export interface ActionRequest {

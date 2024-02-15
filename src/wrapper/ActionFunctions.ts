@@ -1,5 +1,5 @@
 import * as Bytebot from "../api";
-import {BytebotError} from "../errors/BytebotError"
+import { BytebotError } from "../errors/BytebotError";
 import { ElementHandle, Page } from "puppeteer";
 import {
   AttributesType,
@@ -7,6 +7,7 @@ import {
   attributeNames,
   booleanAttributeNames,
   isAttribute,
+  isBooleanAttribute,
 } from "./types/attributesType";
 import {
   BytebotInvalidAttributeError,
@@ -156,7 +157,8 @@ export async function copyAttribute(
 }
 
 /**
- * Assign a value to an attribute of a node
+ * Assign a value to an attribute of a node. NOTE that inputs are treated differently:
+ * it will try to mimic the user typing the value in the input, or clicking it.
  * @param actionOption The action option object
  * @param page The page to get the node from
  * @returns null
@@ -197,35 +199,90 @@ export async function assignAttribute(
     throw e;
   }
   try {
-    // *** Start Browser context ***
-    await elementNodes[0].evaluate(
-      (node, attribute, value, attributeNames, booleanAttributeNames) => {
-        if (!attributeNames.includes(attribute as AttributesType)) {
-          throw new Error(`Invalid Attribute`);
-        }
-        const inputNode = node as HTMLElement;
-        // If the attribute is not a boolean attribute, just set it
-        if (
-          !booleanAttributeNames.includes(attribute as BooleanAttributesType)
-        ) {
-          inputNode.setAttribute(attribute, value);
-          return null;
-        }
+    if (!isAttribute(parameter_attribute))
+      throw new BytebotInvalidAttributeError(parameter_attribute);
+    const element = elementNodes[0];
+    // Get the tag of the element
+    const tagName = await element.evaluate(
+      (node) => (node as HTMLElement).tagName
+    );
 
-        // If the attribute is a boolean attribute, set it if value is "true", remove it otherwise
-        if (value === "true") {
-          inputNode.setAttribute(attribute, "true");
+    // Deal with input elements
+    if (
+      tagName === "input" &&
+      (parameter_attribute === "value" || parameter_attribute === "checked")
+    ) {
+      const inputType = await element.evaluate((node) => {
+        const inputNode = node as HTMLInputElement;
+        return inputNode.type;
+      });
+      switch (inputType) {
+        case "checkbox":
+          const checked = await element.evaluate(
+            (node) => (node as HTMLInputElement).checked
+          );
+          if (parameter_value === "true" && !checked) {
+            await element.evaluate((node) => (node as HTMLInputElement).click());
+          } else if (parameter_value === "false" && checked) {
+            await element.evaluate((node) => (node as HTMLInputElement).click());
+          }
           return null;
-        }
-        inputNode.removeAttribute(attribute);
+        case "radio":
+          const radiochecked = await element.evaluate(
+            (node) => (node as HTMLInputElement).checked
+          );
+          if (parameter_value === "true" && !radiochecked) {
+            await element.evaluate((node) => (node as HTMLInputElement).click());
+          } else if (parameter_value === "false" && radiochecked) {
+            throw new BytebotInvalidParametersError("AssignAttribute", "value");
+          }
+          return null;
+        case "text":
+        case "date":
+        case "datetime-local":
+        case "email":
+        case "month":
+        case "number":
+        case "password":
+        case "search":
+        case "tel":
+        case "time":
+        case "url":
+        case "week":
+          await element.type(parameter_value);
+          return null;
+        default:
+          // DO NOTHING
+      }
+    }
+
+    // Assign boolean attributes
+    if (isBooleanAttribute(parameter_attribute)) {
+      if (parameter_value === "true") {
+        elementNodes[0].evaluate(
+          (node, parameter_attribute) =>
+            (node as HTMLElement).setAttribute(parameter_attribute, "true"),
+          parameter_attribute
+        );
         return null;
+      }
+      elementNodes[0].evaluate(
+        (node, parameter_attribute) =>
+          (node as HTMLElement).removeAttribute(parameter_attribute),
+        parameter_attribute
+      );
+      return null;
+    }
+
+    // Assign any other attribute
+    await element.evaluate(
+      (node, attribute, value) => {
+        const inputNode = node as HTMLElement;
+        inputNode.setAttribute(attribute, value);
       },
       parameter_attribute,
-      parameter_value,
-      attributeNames,
-      booleanAttributeNames
+      parameter_value
     );
-    // *** End Browser context ***
     return null;
   } catch (e: any) {
     // Rethrow the error as a BytebotError

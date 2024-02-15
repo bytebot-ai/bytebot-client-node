@@ -3,7 +3,7 @@
  */
 
 export const BytebotEnvironment = {
-    Default: "https://api.bytebot.ai",
+    Default: "https://api.bytebot.ai/v1",
 } as const;
 
 export type BytebotEnvironment = typeof BytebotEnvironment.Default;
