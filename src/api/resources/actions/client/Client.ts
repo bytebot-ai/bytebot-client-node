@@ -47,7 +47,7 @@ export class Actions {
                 "X-API-KEY": await core.Supplier.get(this._options.apiKey),
                 "X-Fern-Language": "JavaScript",
                 "X-Fern-SDK-Name": "@bytebot/sdk",
-                "X-Fern-SDK-Version": "0.0.21",
+                "X-Fern-SDK-Version": "0.0.22",
             },
             contentType: "application/json",
             body: request,
