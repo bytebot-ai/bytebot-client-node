@@ -1,2 +1,2 @@
-export * as actions from "./actions";
-export * from "./actions/client/requests";
+export * as sessions from "./sessions";
+export * from "./sessions/client/requests";

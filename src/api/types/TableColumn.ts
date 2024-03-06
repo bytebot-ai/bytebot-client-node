@@ -4,12 +4,14 @@
 
 import * as Bytebot from "..";
 
-export interface TableColumn {
-    /** The name of the attribute to extract */
-    actionType: Bytebot.TableColumnActionType;
-    parameters?: Bytebot.TableColumnParameters;
-    /** Name of the column */
-    name: string;
-    /** The XPath to the element(s) from which the column is to be copied */
-    xpath: string;
+export type TableColumn = Bytebot.TableColumn.CopyAttribute | Bytebot.TableColumn.CopyText;
+
+export declare namespace TableColumn {
+    interface CopyAttribute extends Bytebot.TableColumnCopyAttribute {
+        actionType: "CopyAttribute";
+    }
+
+    interface CopyText extends Bytebot.TableColumnCopyText {
+        actionType: "CopyText";
+    }
 }

@@ -4,7 +4,7 @@
 
 import * as environments from "./environments";
 import * as core from "./core";
-import { Actions } from "./api/resources/actions/client/Client";
+import { Sessions } from "./api/resources/sessions/client/Client";
 
 export declare namespace BytebotClient {
     interface Options {
@@ -21,9 +21,9 @@ export declare namespace BytebotClient {
 export class BytebotClient {
     constructor(protected readonly _options: BytebotClient.Options) {}
 
-    protected _actions: Actions | undefined;
+    protected _sessions: Sessions | undefined;
 
-    public get actions(): Actions {
-        return (this._actions ??= new Actions(this._options));
+    public get sessions(): Sessions {
+        return (this._sessions ??= new Sessions(this._options));
     }
 }
