@@ -11,7 +11,7 @@ import {
   assignAttribute,
   copyAttribute,
 } from "./ActionFunctions";
-import { BytebotInvalidActionError } from "./types/actionErrors";
+import { BytebotGenerationError } from "./types/actionErrors";
 import { Logger } from "./Logger";
 
 export declare namespace BytebotClient {
@@ -30,6 +30,7 @@ export declare namespace BytebotClient {
 export class BytebotClient {
   protected _bytebotApiClient: BytebotApiClient;
   protected logger: Logger;
+  protected batchId: string | null = null;
   constructor(options: BytebotClient.ClientOptions = { logVerbose: false }) {
     this._bytebotApiClient = new BytebotApiClient({
       environment: options.apiUrl ?? apiUrlSupplier,
@@ -40,6 +41,10 @@ export class BytebotClient {
       logToConsole: true,
       verbose: options.logVerbose,
     });
+  }
+
+  public setBatchId(batchId: string): void {
+    this.batchId = batchId;
   }
 
   /**
@@ -58,14 +63,20 @@ export class BytebotClient {
     const html = await page.content();
     const url = page.url();
     this.logger.info("Generating actions");
-    const actions =
-      (
-        await this._bytebotApiClient.actions.generateActions({
-          url,
-          html,
-          prompt,
-        })
-      ).actions ?? [];
+
+    const response = await this._bytebotApiClient.sessions.create({
+      url,
+      html,
+      prompt,
+      // include the batchId if it is set
+      ...(this.batchId ? { batchId: this.batchId } : {}),
+    });
+
+    if (response.error) {
+      throw new BytebotGenerationError(response.error);
+    }
+
+    const actions = response.actions ?? [];
     this.logger.info(
       `Generated ${actions.length} action${actions.length > 1 ? "s" : ""}`
     );
@@ -87,28 +98,15 @@ export class BytebotClient {
     action: Bytebot.ActionDetail,
     parameters: { [key: string]: any }
   ): void {
-    function isAssignAttributeParameters(
-      params: any
-    ): params is Bytebot.ActionDetailParameters.AssignAttribute {
-      return params?.actionType === "AssignAttribute";
+    if (action.actionType !== "AssignAttribute") {
+      // Only AssignAttribute action type has parameters
+      return;
     }
 
-    const actionParameters = action.parameters;
-
-    if (isAssignAttributeParameters(actionParameters)) {
-      // Logic to securely resolve parameter references to their actual values
-      Object.keys(parameters).forEach((key) => {
-        // Resolve the parameter reference to its actual value
-        // Example: parameters[key] might be replaced with a secure lookup of the actual value
-        actionParameters.value = actionParameters.value.replace(
-          `${key}`,
-          parameters[key]
-        );
-      });
-    }
-
-    // Assign the resolved parameters back to the action
-    action.parameters = actionParameters;
+    Object.keys(parameters).forEach((key) => {
+      // Resolve the parameter reference to its actual value
+      action.value = action.value.replace(`${key}`, parameters[key]);
+    });
   }
 
   /**
@@ -168,7 +166,7 @@ export class BytebotClient {
       case "ExtractTable":
         return extractTable(actionOption, page);
       default:
-        throw new BytebotInvalidActionError(actionOption.actionType);
+        throw new Error("List of actions should be exhaustive");
     }
   }
 
