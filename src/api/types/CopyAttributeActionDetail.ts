@@ -4,7 +4,6 @@
 
 import * as Bytebot from "..";
 
-export interface ActionResponse {
-    actions?: Bytebot.ActionDetail[];
-    error?: string;
+export interface CopyAttributeActionDetail extends Bytebot.ActionDetailBase {
+    attribute: string;
 }

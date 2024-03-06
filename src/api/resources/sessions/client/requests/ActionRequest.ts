@@ -11,10 +11,8 @@
  *     }
  */
 export interface ActionRequest {
-    /** The URL of the page to perform actions on */
     url: string;
-    /** HTML content */
     html: string;
-    /** Prompt for generating actions */
     prompt: string;
+    batchId?: string;
 }

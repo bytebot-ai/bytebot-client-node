@@ -3,7 +3,7 @@ import { BytebotError } from "../../errors";
 export class BytebotMultipleElementsError extends BytebotError {
   constructor(xpath: string) {
     super({ message: `More than one element found for xpath ${xpath}` });
-    
+
     Object.setPrototypeOf(this, BytebotMultipleElementsError.prototype);
     this.name = "BytebotMultipleElementsError";
   }
@@ -11,15 +11,23 @@ export class BytebotMultipleElementsError extends BytebotError {
 
 export class BytebotNoElementError extends BytebotError {
   constructor(xpath: string) {
-    super({ message: `No element found for xpath ${xpath}`});
+    super({ message: `No element found for xpath ${xpath}` });
     Object.setPrototypeOf(this, BytebotNoElementError.prototype);
     this.name = "BytebotNoElementError";
   }
 }
 
+export class BytebotGenerationError extends BytebotError {
+  constructor(serverError: string) {
+    super({ message: `Error generating actions: ${serverError}` });
+    Object.setPrototypeOf(this, BytebotGenerationError.prototype);
+    this.name = "BytebotGenerationError";
+  }
+}
+
 export class BytebotInvalidAttributeError extends BytebotError {
   constructor(attribute: string) {
-    super({ message: `Invalid attribute ${attribute}`});
+    super({ message: `Invalid attribute ${attribute}` });
     Object.setPrototypeOf(this, BytebotInvalidAttributeError.prototype);
     this.name = "BytebotInvalidAttributeError";
   }
@@ -27,7 +35,7 @@ export class BytebotInvalidAttributeError extends BytebotError {
 
 export class BytebotInvalidActionError extends BytebotError {
   constructor(actionType: string) {
-    super({ message: `Invalid action ${actionType}`});
+    super({ message: `Invalid action ${actionType}` });
     Object.setPrototypeOf(this, BytebotInvalidActionError.prototype);
     this.name = "BytebotInvalidActionError";
   }
@@ -39,7 +47,7 @@ export class BytebotInvalidParametersError extends BytebotError {
     if (parameter) {
       msg += `: parameter ${parameter}`;
     }
-    super({ message: msg});
+    super({ message: msg });
     Object.setPrototypeOf(this, BytebotInvalidParametersError.prototype);
     this.name = "BytebotInvalidParametersError";
   }

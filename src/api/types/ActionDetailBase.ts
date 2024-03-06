@@ -4,7 +4,7 @@
 
 import * as Bytebot from "..";
 
-export interface ActionResponse {
-    actions?: Bytebot.ActionDetail[];
-    error?: string;
+export interface ActionDetailBase {
+    xpath: string;
+    result?: Bytebot.ActionDetailResult;
 }

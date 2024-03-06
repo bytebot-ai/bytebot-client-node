@@ -5,6 +5,10 @@
 
 The Bytebot Node.js library provides access to the Bytebot API from JavaScript/TypeScript.
 
+## Requirements
+
+Bytebot requires Puppeteer version **21.9.0**.
+
 ## API Docs
 
 You can find Bytebot's complete API docs at [docs.bytebot.ai](https://docs.bytebot.ai).

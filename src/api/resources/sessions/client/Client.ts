@@ -8,7 +8,7 @@ import * as Bytebot from "../../..";
 import urlJoin from "url-join";
 import * as errors from "../../../../errors";
 
-export declare namespace Actions {
+export declare namespace Sessions {
     interface Options {
         environment?: core.Supplier<environments.BytebotEnvironment | string>;
         apiKey: core.Supplier<string>;
@@ -20,34 +20,34 @@ export declare namespace Actions {
     }
 }
 
-export class Actions {
-    constructor(protected readonly _options: Actions.Options) {}
+export class Sessions {
+    constructor(protected readonly _options: Sessions.Options) {}
 
     /**
      * @throws {@link Bytebot.BadRequestError}
      *
      * @example
-     *     await bytebot.actions.generateActions({
+     *     await bytebot.sessions.create({
      *         url: "url",
      *         html: "html",
      *         prompt: "prompt"
      *     })
      */
-    public async generateActions(
+    public async create(
         request: Bytebot.ActionRequest,
-        requestOptions?: Actions.RequestOptions
+        requestOptions?: Sessions.RequestOptions
     ): Promise<Bytebot.ActionResponse> {
         const _response = await core.fetcher({
             url: urlJoin(
                 (await core.Supplier.get(this._options.environment)) ?? environments.BytebotEnvironment.Default,
-                "generate-actions"
+                "sessions"
             ),
             method: "POST",
             headers: {
                 "X-API-KEY": await core.Supplier.get(this._options.apiKey),
                 "X-Fern-Language": "JavaScript",
                 "X-Fern-SDK-Name": "@bytebot/sdk",
-                "X-Fern-SDK-Version": "0.0.22",
+                "X-Fern-SDK-Version": "0.0.23",
             },
             contentType: "application/json",
             body: request,
