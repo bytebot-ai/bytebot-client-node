@@ -3,9 +3,7 @@ import { BytebotError } from "../errors/BytebotError";
 import { ElementHandle, Page } from "puppeteer";
 import {
   AttributesType,
-  BooleanAttributesType,
   attributeNames,
-  booleanAttributeNames,
   isAttribute,
   isBooleanAttribute,
 } from "./types/attributesType";
@@ -15,6 +13,7 @@ import {
   BytebotMultipleElementsError,
   BytebotNoElementError,
 } from "./types/actionErrors";
+import { ActionDetailResult } from "api/types/ActionDetailResult";
 
 // ***************************************
 // *** Helper functions (not exported) ***
@@ -22,7 +21,7 @@ import {
 
 function joinPath(absolute: string, relative: string): string {
   if (absolute.endsWith("/")) absolute = absolute.slice(0, -1);
-  if (relative === "" || relative === "." ) return absolute;
+  if (relative === "" || relative === ".") return absolute;
   if (relative.startsWith("./")) relative = relative.slice(2);
   if (relative.startsWith("/")) relative = relative.slice(1);
   return `${absolute}/${relative}`;
@@ -42,29 +41,6 @@ async function concatenatePromises<T>(promises: Promise<T>[]): Promise<T[]> {
     concatenatePromises(rest).then((res2) => [res_1, ...res2])
   );
 }
-/**
- * Extract the element from the page according to the xpath and evaluate the function on the element.
- * Works for functions that don't require parameters
- * */
-async function runEvaluateOneElement(
-  xpath: string,
-  page: Page,
-  evaluateFun: (node: Node) => Bytebot.ActionDetailResult
-): Promise<Bytebot.ActionDetailResult> {
-  return page.$x(xpath).then(async (elementNodes) => {
-    try {
-      if (elementNodes.length > 1) {
-        throw new BytebotMultipleElementsError(xpath);
-      }
-      if (elementNodes.length === 0) {
-        throw new BytebotNoElementError(xpath);
-      }
-      return await elementNodes[0].evaluate(evaluateFun);
-    } finally {
-      elementNodes.forEach(async (element) => await element.dispose());
-    }
-  });
-}
 
 // ************************
 // *** Action functions ***
@@ -72,45 +48,68 @@ async function runEvaluateOneElement(
 
 /**
  * Get the innerText of a node
- * @param actionOption The action option object
+ * @param action The browser action object
  * @param page The page to get the node from
  * @returns The innerText of the node or null
  */
 export async function copyText(
-  actionOption: Bytebot.ActionDetail,
+  action: Bytebot.BrowserAction.CopyText,
   page: Page
-): Promise<Bytebot.ActionDetailResult> {
-  return runEvaluateOneElement(actionOption.xpath, page, (node) => {
-    return (node as HTMLElement).innerText ?? null;
+): Promise<null | string> {
+  return page.$x(action.xpath).then(async (elementNodes) => {
+    try {
+      if (elementNodes.length > 1) {
+        throw new BytebotMultipleElementsError(action.xpath);
+      }
+      if (elementNodes.length === 0) {
+        throw new BytebotNoElementError(action.xpath);
+      }
+      return await elementNodes[0].evaluate((node) => {
+        return (node as HTMLElement).innerText ?? null;
+      });
+    } finally {
+      elementNodes.forEach(async (element) => await element.dispose());
+    }
   });
 }
 
 /**
  * Click on a node
- * @param actionOption The action option object
+ * @param action The browser action object
  * @param page The page to get the node from
  * @returns null
  */
 export function click(
-  actionOption: Bytebot.ActionDetail,
+  action: Bytebot.BrowserAction.Click,
   page: Page
-): Promise<Bytebot.ActionDetailResult> {
-  return runEvaluateOneElement(actionOption.xpath, page, (node) => {
-    (node as HTMLElement).click();
-    return null;
+): Promise<void> {
+  return page.$x(action.xpath).then(async (elementNodes) => {
+    try {
+      if (elementNodes.length > 1) {
+        throw new BytebotMultipleElementsError(action.xpath);
+      }
+      if (elementNodes.length === 0) {
+        throw new BytebotNoElementError(action.xpath);
+      }
+      return await elementNodes[0].evaluate((node) => {
+        (node as HTMLElement).click();
+      });
+    } finally {
+      elementNodes.forEach(async (element) => await element.dispose());
+    }
   });
 }
 
 /**
  * Get the value of an attribute of a node
- * @param actionOption The action option object
+ * @param action The browser action object
  * @param page The page to get the node from
  * @returns The value of the attribute or null
  */
 export async function copyAttribute(
-  actionOption: Bytebot.ActionDetail.CopyAttribute,
+  actionOption: Bytebot.BrowserAction.CopyAttribute,
   page: Page
-): Promise<Bytebot.ActionDetailResult> {
+): Promise<null | string> {
   // Extract the element from the page according to the xpath
   const elementNodes = await page.$x(actionOption.xpath);
 
@@ -126,7 +125,7 @@ export async function copyAttribute(
 
     // Validate the parameters
     if (!actionOption.attribute)
-      throw new BytebotInvalidParametersError(actionOption.actionType);
+      throw new BytebotInvalidParametersError(actionOption.type);
 
     parameter_attribute = actionOption.attribute;
   } catch (e: any) {
@@ -162,38 +161,35 @@ export async function copyAttribute(
 /**
  * Assign a value to an attribute of a node. NOTE that inputs are treated differently:
  * it will try to mimic the user typing the value in the input, or clicking it.
- * @param actionOption The action option object
+ * @param action The browser action object
  * @param page The page to get the node from
  * @returns null
  */
 export async function assignAttribute(
-  actionOption: Bytebot.ActionDetail.AssignAttribute,
+  action: Bytebot.BrowserAction.AssignAttribute,
   page: Page
-): Promise<Bytebot.ActionDetailResult> {
+): Promise<void> {
   // Extract the element from the page according to the xpath
-  const elementNodes = await page.$x(actionOption.xpath);
+  const elementNodes = await page.$x(action.xpath);
 
   let parameter_attribute: string | undefined;
   let parameter_value: string | undefined;
   try {
     // Validate the number of elements
     if (elementNodes.length > 1) {
-      throw new BytebotMultipleElementsError(actionOption.xpath);
+      throw new BytebotMultipleElementsError(action.xpath);
     }
     if (elementNodes.length === 0) {
-      throw new BytebotNoElementError(actionOption.xpath);
+      throw new BytebotNoElementError(action.xpath);
     }
 
     // Validate the parameters
-    if (!actionOption.attribute)
-      throw new BytebotInvalidParametersError(
-        actionOption.actionType,
-        "attribute"
-      );
-    parameter_attribute = actionOption.attribute;
-    if (!actionOption.value)
-      throw new BytebotInvalidParametersError(actionOption.actionType, "value");
-    parameter_value = actionOption.value;
+    if (!action.attribute)
+      throw new BytebotInvalidParametersError(action.type, "attribute");
+    parameter_attribute = action.attribute;
+    if (!action.value)
+      throw new BytebotInvalidParametersError(action.type, "value");
+    parameter_value = action.value;
   } catch (e: any) {
     elementNodes.forEach(async (element) => await element.dispose());
     throw e;
@@ -230,7 +226,7 @@ export async function assignAttribute(
               (node as HTMLInputElement).click()
             );
           }
-          return null;
+          return;
         case "radio":
           const radiochecked = await element.evaluate(
             (node) => (node as HTMLInputElement).checked
@@ -242,7 +238,7 @@ export async function assignAttribute(
           } else if (parameter_value === "false" && radiochecked) {
             throw new BytebotInvalidParametersError("AssignAttribute", "value");
           }
-          return null;
+          return;
         case "text":
         case "date":
         case "datetime-local":
@@ -257,7 +253,7 @@ export async function assignAttribute(
         case "week":
           //console.log(`Typing ${parameter_value} into ${parameter_attribute} of ${inputType}`)
           await element.type(parameter_value, { delay: 100 });
-          return null;
+          return;
         default:
         // DO NOTHING
       }
@@ -271,14 +267,14 @@ export async function assignAttribute(
             (node as HTMLElement).setAttribute(parameter_attribute, "true"),
           parameter_attribute
         );
-        return null;
+        return;
       }
       elementNodes[0].evaluate(
         (node, parameter_attribute) =>
           (node as HTMLElement).removeAttribute(parameter_attribute),
         parameter_attribute
       );
-      return null;
+      return;
     }
 
     // Assign any other attribute
@@ -290,7 +286,7 @@ export async function assignAttribute(
       parameter_attribute,
       parameter_value
     );
-    return null;
+    return;
   } catch (e: any) {
     // Rethrow the error as a BytebotError
     if (e.message === "Invalid Attribute" && parameter_attribute) {
@@ -302,136 +298,108 @@ export async function assignAttribute(
   }
 }
 
+/** Private type used to temporarily hold the content of a table cell */
+type ExtractCell = {
+  cellElement: ElementHandle<Node>;
+  name: string;
+  actionType: string;
+  attribute?: string;
+};
+
+/** Private function that validates the inputs of a cell and extracts the element from its xpath */
+async function getTableCellHandle(
+  cell: Bytebot.ExtractTableColumnBrowserAction,
+  page: Page
+): Promise<ExtractCell> {
+  const action = cell.action;
+  // Validate the parameters of each column
+  if (action.xpath === undefined || action.xpath === null)
+    throw new BytebotInvalidParametersError(action.type, "xpath");
+  if (cell.name === undefined || cell.name === null)
+    throw new BytebotInvalidParametersError(action.type, "name");
+  if (action.type !== "CopyText" && action.type !== "CopyAttribute")
+    throw new BytebotInvalidParametersError("never", "type");
+  if (
+    action.type === "CopyAttribute" &&
+    (action.attribute === undefined || action.attribute === null)
+  )
+    throw new BytebotInvalidParametersError(action.type, "attribute");
+
+  const attr = action.type === "CopyAttribute" ? action.attribute : undefined;
+
+  const node = await page.$x(action.xpath).then((elementNodes) => {
+    if (elementNodes.length > 1) {
+      throw new BytebotMultipleElementsError(action.xpath);
+    }
+    if (elementNodes.length === 0) {
+      throw new BytebotNoElementError(action.xpath);
+    }
+    action.xpath;
+    return elementNodes[0];
+  });
+  return {
+    cellElement: node,
+    name: cell.name,
+    actionType: action.type,
+    attribute: attr,
+  } as ExtractCell;
+}
+
 /**
  * Extract values from a table
- * @param actionOption The action option object
+ * @param action The action option object
  * @param page The page to get the node from
  * @returns An array of objects, each object representing a row of the table as a dictionary
  */
 export async function extractTable(
-  actionOption: Bytebot.ActionDetail.ExtractTable,
+  actionOption: Bytebot.BrowserAction.ExtractTable,
   page: Page
-): Promise<Bytebot.ActionDetailResult> {
-  // Define a type to hold the handle and the parameters of a column
-  type ExtractColumn = {
-    column: ElementHandle<Node>[];
-    name: string;
-    actionType: string;
-    attribute?: string;
-  };
-  // Validate the parameters
-  const xpath = actionOption.xpath;
-  let columns: ExtractColumn[] = [];
-  let rows: ElementHandle<Node>[] = [];
+): Promise<ActionDetailResult> {
+  if (!actionOption.rows)
+    throw new BytebotInvalidParametersError(actionOption.type, "rows");
+  if (actionOption.rows.length === 0) return [];
+
+  let rows: ExtractCell[][] = [];
   try {
-    if (!actionOption.columns)
-      throw new BytebotInvalidParametersError(
-        actionOption.actionType,
-        "columns"
-      );
-
-    // convert parameters.columns to an array of ExtractColumn objects
-    columns = await concatenatePromises(
-      actionOption.columns.map(async (column) => {
-        // Validate the parameters of each column
-        if (column.xpath === undefined || column.xpath === null)
-          throw new BytebotInvalidParametersError(
-            actionOption.actionType,
-            "columns.xpath"
-          );
-        if (!column.name)
-          throw new BytebotInvalidParametersError(
-            actionOption.actionType,
-            "columns.name"
-          );
-
-        const colXpath = joinPath(xpath, column.xpath);
-        const attr =
-          column.actionType === "CopyAttribute" ? column.attribute : undefined;
-        return {
-          column: await page.$x(colXpath),
-          name: column.name,
-          actionType: column.actionType,
-          attribute: attr,
-        };
-      })
+    // convert parameters.rows to an array of arrays of ExtractColumn objects
+    rows = await concatenatePromises(
+      actionOption.rows.map(
+        async (row) =>
+          await concatenatePromises(
+            row.map(async (column) => getTableCellHandle(column, page))
+          )
+      )
     );
-
-    rows = await page.$x(xpath);
   } catch (e: any) {
-    columns.forEach(async (column) =>
-      column.column.forEach(async (element) => await element.dispose())
+    rows.forEach(async (row) =>
+      row.forEach(async (column) => await column.cellElement.dispose())
     );
-    rows.forEach(async (row) => await row.dispose());
     throw e;
   }
-  // create an array the same length as the number of rows
-  let results: { [key: string]: string | null }[] = new Array(rows.length).fill(
-    {}
-  );
+
+  let results: { [key: string]: string | null }[] = [];
   try {
-    for (const column of columns) {
-      for (const element of column.column) {
-        // *** Start Browser context ***
-        let [rowIndex, value] = await page.evaluate(
-          (column, element, ...rows) => {
-            const isParent: (parent: Node, child: Node) => boolean = (
-              parent: Node,
-              child: Node
-            ) => {
-              if (parent === child) {
-                return true;
-              }
-              if (child.parentNode) {
-                return isParent(parent, child.parentNode);
-              }
-              return false;
-            };
-
-            let fun: (node: HTMLElement, attribute?: string) => string | null;
-            switch (column.actionType) {
-              case "CopyText":
-                fun = (node: HTMLElement) => node.innerText ?? null; // FIXME: InnerHtml?
-                break;
-              case "CopyAttribute":
-                fun = (node: HTMLElement, attribute?: string) =>
-                  attribute ? node.getAttribute(attribute) : null;
-                break;
-              default:
-                throw new Error(
-                  `ExtractTable: unknown column action type: ${column.actionType}`
-                );
-            }
-
-            const rowIndex: number = rows.findIndex((row) =>
-              isParent(row, element)
-            );
-            let value = null;
-            // If the element is a child of a row, get the value
-            if (rowIndex > -1) {
-              value = fun(element as HTMLElement, column.attribute);
-            }
-
-            return [rowIndex, value];
-          },
-          column,
-          element,
-          ...rows
-        );
-        // *** End Browser context ***
-
-        // Establish rowIndex as a number
-        // (it's serialized as a string | number | null type by page.evaluate)
-        if (typeof rowIndex === "number") {
-          rowIndex = rowIndex as number;
-
-          if (rowIndex > -1) {
-            results[rowIndex] = {
-              ...results[rowIndex],
-              [column.name]: value?.toString() || null,
-            };
-          }
+    let rowIndex = -1;
+    for (const row of rows) {
+      rowIndex++;
+      for (const column of row) {
+        let value: string | null = null;
+        if (column.actionType === "CopyText") {
+          value = await column.cellElement.evaluate((node) => {
+            if (node.nodeType === 3) return (node as Text).data.trim();
+            return (node as HTMLElement).innerText ?? null;
+          });
         }
+        if (column.actionType === "CopyAttribute") {
+          value = await column.cellElement.evaluate((node, attribute) => {
+            const inputNode = node as HTMLElement;
+            return inputNode.getAttribute(attribute!) ?? null;
+          }, column.attribute);
+        }
+        results[rowIndex] = {
+          ...results[rowIndex],
+          [column.name]: value?.toString() || null,
+        };
       }
     }
 
@@ -444,16 +412,12 @@ export async function extractTable(
       )
     ) {
       const actionType = (e.message as string).split(":")[2].trim();
-      throw new BytebotInvalidParametersError(
-        actionOption.actionType,
-        actionType
-      );
+      throw new BytebotInvalidParametersError(actionOption.type, actionType);
     }
     throw new BytebotError(e.message);
   } finally {
-    columns.forEach(async (column) =>
-      column.column.forEach(async (element) => await element.dispose())
+    rows.forEach(async (row) =>
+      row.forEach(async (column) => await column.cellElement.dispose())
     );
-    rows.forEach(async (row) => await row.dispose());
   }
 }
