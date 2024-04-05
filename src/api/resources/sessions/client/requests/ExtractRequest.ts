@@ -7,12 +7,12 @@
  *     {
  *         url: "url",
  *         html: "html",
- *         prompt: "prompt"
+ *         schema: "schema"
  *     }
  */
-export interface ActionRequest {
+export interface ExtractRequest {
     url: string;
     html: string;
-    prompt: string;
+    schema: string;
     batchId?: string;
 }

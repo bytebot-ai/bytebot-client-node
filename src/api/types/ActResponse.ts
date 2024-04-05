@@ -4,4 +4,7 @@
 
 import * as Bytebot from "..";
 
-export interface ClickActionDetail extends Bytebot.ActionDetailBase {}
+export interface ActResponse {
+    actions?: Bytebot.ActResponseActionsItem[];
+    error?: string;
+}

@@ -44,7 +44,7 @@ export declare namespace Fetcher {
 
 const INITIAL_RETRY_DELAY = 1;
 const MAX_RETRY_DELAY = 60;
-const DEFAULT_MAX_RETRIES = 2;
+const DEFAULT_MAX_RETRIES = 0;
 
 async function fetcherImpl<R = unknown>(args: Fetcher.Args): Promise<APIResponse<R, Fetcher.Error>> {
     const headers: Record<string, string> = {};

@@ -4,7 +4,4 @@
 
 import * as Bytebot from "..";
 
-export interface ActionDetailBase {
-    xpath: string;
-    result?: Bytebot.ActionDetailResult;
-}
+export type ExtractTableRowBrowserAction = Bytebot.ExtractTableColumnBrowserAction[];
