@@ -4,4 +4,4 @@
 
 import * as Bytebot from "..";
 
-export interface CopyTextActionDetail extends Bytebot.ActionDetailBase {}
+export interface ClickBrowserAction extends Bytebot.BrowserActionBase {}

@@ -27,27 +27,27 @@ export class Sessions {
      * @throws {@link Bytebot.BadRequestError}
      *
      * @example
-     *     await bytebot.sessions.create({
+     *     await bytebot.sessions.act({
      *         url: "url",
      *         html: "html",
      *         prompt: "prompt"
      *     })
      */
-    public async create(
-        request: Bytebot.ActionRequest,
+    public async act(
+        request: Bytebot.ActRequest,
         requestOptions?: Sessions.RequestOptions
-    ): Promise<Bytebot.ActionResponse> {
+    ): Promise<Bytebot.ActResponse> {
         const _response = await core.fetcher({
             url: urlJoin(
                 (await core.Supplier.get(this._options.environment)) ?? environments.BytebotEnvironment.Default,
-                "sessions"
+                "sessions/act"
             ),
             method: "POST",
             headers: {
                 "X-API-KEY": await core.Supplier.get(this._options.apiKey),
                 "X-Fern-Language": "JavaScript",
                 "X-Fern-SDK-Name": "@bytebot/sdk",
-                "X-Fern-SDK-Version": "0.0.23",
+                "X-Fern-SDK-Version": "0.0.24",
             },
             contentType: "application/json",
             body: request,
@@ -55,7 +55,69 @@ export class Sessions {
             maxRetries: requestOptions?.maxRetries,
         });
         if (_response.ok) {
-            return _response.body as Bytebot.ActionResponse;
+            return _response.body as Bytebot.ActResponse;
+        }
+
+        if (_response.error.reason === "status-code") {
+            switch (_response.error.statusCode) {
+                case 400:
+                    throw new Bytebot.BadRequestError(_response.error.body as unknown);
+                default:
+                    throw new errors.BytebotError({
+                        statusCode: _response.error.statusCode,
+                        body: _response.error.body,
+                    });
+            }
+        }
+
+        switch (_response.error.reason) {
+            case "non-json":
+                throw new errors.BytebotError({
+                    statusCode: _response.error.statusCode,
+                    body: _response.error.rawBody,
+                });
+            case "timeout":
+                throw new errors.BytebotTimeoutError();
+            case "unknown":
+                throw new errors.BytebotError({
+                    message: _response.error.errorMessage,
+                });
+        }
+    }
+
+    /**
+     * @throws {@link Bytebot.BadRequestError}
+     *
+     * @example
+     *     await bytebot.sessions.extract({
+     *         url: "url",
+     *         html: "html",
+     *         schema: "schema"
+     *     })
+     */
+    public async extract(
+        request: Bytebot.ExtractRequest,
+        requestOptions?: Sessions.RequestOptions
+    ): Promise<Bytebot.ExtractResponse> {
+        const _response = await core.fetcher({
+            url: urlJoin(
+                (await core.Supplier.get(this._options.environment)) ?? environments.BytebotEnvironment.Default,
+                "sessions/extract"
+            ),
+            method: "POST",
+            headers: {
+                "X-API-KEY": await core.Supplier.get(this._options.apiKey),
+                "X-Fern-Language": "JavaScript",
+                "X-Fern-SDK-Name": "@bytebot/sdk",
+                "X-Fern-SDK-Version": "0.0.24",
+            },
+            contentType: "application/json",
+            body: request,
+            timeoutMs: requestOptions?.timeoutInSeconds != null ? requestOptions.timeoutInSeconds * 1000 : 120000,
+            maxRetries: requestOptions?.maxRetries,
+        });
+        if (_response.ok) {
+            return _response.body as Bytebot.ExtractResponse;
         }
 
         if (_response.error.reason === "status-code") {

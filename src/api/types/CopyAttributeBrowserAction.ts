@@ -4,7 +4,6 @@
 
 import * as Bytebot from "..";
 
-export interface AssignAttributeActionDetail extends Bytebot.ActionDetailBase {
+export interface CopyAttributeBrowserAction extends Bytebot.BrowserActionBase {
     attribute: string;
-    value: string;
 }

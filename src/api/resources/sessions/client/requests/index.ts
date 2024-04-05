@@ -1,1 +1,2 @@
-export { ActionRequest } from "./ActionRequest";
+export { ActRequest } from "./ActRequest";
+export { ExtractRequest } from "./ExtractRequest";

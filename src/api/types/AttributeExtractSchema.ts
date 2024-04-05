@@ -4,6 +4,4 @@
 
 import * as Bytebot from "..";
 
-export interface TableColumnCopyText extends Bytebot.CopyTextActionDetail {
-    name: string;
-}
+export interface AttributeExtractSchema extends Bytebot.BaseExtractSchema {}
