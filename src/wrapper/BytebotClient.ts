@@ -12,6 +12,7 @@ import {
 } from "./ActionFunctions";
 import { BytebotGenerationError } from "./types/actionErrors";
 import { Logger } from "./Logger";
+import { createId } from "@paralleldrive/cuid2";
 
 declare global {
   interface Window {
@@ -39,7 +40,7 @@ export declare namespace BytebotClient {
 export class BytebotClient {
   protected _bytebotApiClient: BytebotApiClient;
   protected logger: Logger;
-  protected batchId: string | null = null;
+  protected sessionId: string | null = null;
   constructor(options: BytebotClient.ClientOptions = { logVerbose: false }) {
     this._bytebotApiClient = new BytebotApiClient({
       environment: options.apiUrl ?? apiUrlSupplier,
@@ -52,8 +53,14 @@ export class BytebotClient {
     });
   }
 
-  public setBatchId(batchId: string): void {
-    this.batchId = batchId;
+  public startSesseion(): void {
+    this.sessionId = createId();
+    this.logger.info("Starting session: " + this.sessionId);
+  }
+
+  public endSession(): void {
+    this.logger.info("Ending session: " + this.sessionId);
+    this.sessionId = null;
   }
 
   private async getPageData(
@@ -94,12 +101,12 @@ export class BytebotClient {
     const { url, html } = await this.getPageData(page);
     this.logger.info("Generating actions");
 
-    const response = await this._bytebotApiClient.sessions.act({
+    const response = await this._bytebotApiClient.requests.act({
       url,
       html,
       prompt,
-      // include the batchId if it is set
-      ...(this.batchId ? { batchId: this.batchId } : {}),
+      // include the sessionId if it is set
+      ...(this.sessionId ? { sessionId: this.sessionId } : {}),
     });
 
     if (response.error) {
@@ -128,12 +135,12 @@ export class BytebotClient {
     const { url, html } = await this.getPageData(page);
     this.logger.info("Generating actions");
 
-    const response = await this._bytebotApiClient.sessions.extract({
+    const response = await this._bytebotApiClient.requests.extract({
       url,
       html,
       schema: JSON.stringify(schema, null, 2),
-      // include the batchId if it is set
-      ...(this.batchId ? { batchId: this.batchId } : {}),
+      // include the sessionId if it is set
+      ...(this.sessionId ? { batchId: this.sessionId } : {}),
     });
 
     const actions: [Bytebot.ExtractResponseAction] | [] = response.action
