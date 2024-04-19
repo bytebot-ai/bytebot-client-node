@@ -8,7 +8,7 @@ import * as Bytebot from "../../..";
 import urlJoin from "url-join";
 import * as errors from "../../../../errors";
 
-export declare namespace Sessions {
+export declare namespace Requests {
     interface Options {
         environment?: core.Supplier<environments.BytebotEnvironment | string>;
         apiKey: core.Supplier<string>;
@@ -20,14 +20,14 @@ export declare namespace Sessions {
     }
 }
 
-export class Sessions {
-    constructor(protected readonly _options: Sessions.Options) {}
+export class Requests {
+    constructor(protected readonly _options: Requests.Options) {}
 
     /**
      * @throws {@link Bytebot.BadRequestError}
      *
      * @example
-     *     await bytebot.sessions.act({
+     *     await bytebot.requests.act({
      *         url: "url",
      *         html: "html",
      *         prompt: "prompt"
@@ -35,19 +35,19 @@ export class Sessions {
      */
     public async act(
         request: Bytebot.ActRequest,
-        requestOptions?: Sessions.RequestOptions
+        requestOptions?: Requests.RequestOptions
     ): Promise<Bytebot.ActResponse> {
         const _response = await core.fetcher({
             url: urlJoin(
                 (await core.Supplier.get(this._options.environment)) ?? environments.BytebotEnvironment.Default,
-                "sessions/act"
+                "requests/act"
             ),
             method: "POST",
             headers: {
                 "X-API-KEY": await core.Supplier.get(this._options.apiKey),
                 "X-Fern-Language": "JavaScript",
                 "X-Fern-SDK-Name": "@bytebot/sdk",
-                "X-Fern-SDK-Version": "0.0.24",
+                "X-Fern-SDK-Version": "0.0.25",
             },
             contentType: "application/json",
             body: request,
@@ -89,7 +89,7 @@ export class Sessions {
      * @throws {@link Bytebot.BadRequestError}
      *
      * @example
-     *     await bytebot.sessions.extract({
+     *     await bytebot.requests.extract({
      *         url: "url",
      *         html: "html",
      *         schema: "schema"
@@ -97,19 +97,19 @@ export class Sessions {
      */
     public async extract(
         request: Bytebot.ExtractRequest,
-        requestOptions?: Sessions.RequestOptions
+        requestOptions?: Requests.RequestOptions
     ): Promise<Bytebot.ExtractResponse> {
         const _response = await core.fetcher({
             url: urlJoin(
                 (await core.Supplier.get(this._options.environment)) ?? environments.BytebotEnvironment.Default,
-                "sessions/extract"
+                "requests/extract"
             ),
             method: "POST",
             headers: {
                 "X-API-KEY": await core.Supplier.get(this._options.apiKey),
                 "X-Fern-Language": "JavaScript",
                 "X-Fern-SDK-Name": "@bytebot/sdk",
-                "X-Fern-SDK-Version": "0.0.24",
+                "X-Fern-SDK-Version": "0.0.25",
             },
             contentType: "application/json",
             body: request,
