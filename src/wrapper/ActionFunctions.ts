@@ -47,21 +47,20 @@ export async function copyText(
   action: Bytebot.BrowserAction.CopyText,
   page: Page
 ): Promise<null | string> {
-  return page.$x(action.xpath).then(async (elementNodes) => {
-    try {
-      if (elementNodes.length > 1) {
-        throw new BytebotMultipleElementsError(action.xpath);
+  return page
+    .$("xpath/" + action.xpath)
+    .then(async (elementNode) => {
+      try {
+        if (elementNode === null) {
+          throw new BytebotNoElementError(action.xpath);
+        }
+        return await elementNode.evaluate((node) => {
+          return (node as HTMLElement).innerText ?? null;
+        });
+      } finally {
+        if (elementNode) await elementNode.dispose();
       }
-      if (elementNodes.length === 0) {
-        throw new BytebotNoElementError(action.xpath);
-      }
-      return await elementNodes[0].evaluate((node) => {
-        return (node as HTMLElement).innerText ?? null;
-      });
-    } finally {
-      elementNodes.forEach(async (element) => await element.dispose());
-    }
-  });
+    });
 }
 
 /**
@@ -74,19 +73,18 @@ export function click(
   action: Bytebot.BrowserAction.Click,
   page: Page
 ): Promise<void> {
-  return page.$x(action.xpath).then(async (elementNodes) => {
+  return page
+  .$("xpath/" + action.xpath)
+  .then(async (elementNode) => {
     try {
-      if (elementNodes.length > 1) {
-        throw new BytebotMultipleElementsError(action.xpath);
-      }
-      if (elementNodes.length === 0) {
+      if (elementNode === null) {
         throw new BytebotNoElementError(action.xpath);
       }
-      return await elementNodes[0].evaluate((node) => {
+      return await elementNode.evaluate((node) => {
         (node as HTMLElement).click();
       });
     } finally {
-      elementNodes.forEach(async (element) => await element.dispose());
+      if (elementNode) await elementNode.dispose();
     }
   });
 }
@@ -102,31 +100,27 @@ export async function copyAttribute(
   page: Page
 ): Promise<null | string> {
   // Extract the element from the page according to the xpath
-  const elementNodes = await page.$x(actionOption.xpath);
+  const elementNode = await page
+  .$("xpath/" + actionOption.xpath);
 
   let parameter_attribute: string | undefined;
   try {
-    // Validate the number of elements
-    if (elementNodes.length > 1) {
-      throw new BytebotMultipleElementsError(actionOption.xpath);
-    }
-    if (elementNodes.length === 0) {
+    if (elementNode === null) {
       throw new BytebotNoElementError(actionOption.xpath);
     }
-
     // Validate the parameters
     if (!actionOption.attribute)
       throw new BytebotInvalidParametersError(actionOption.type);
 
     parameter_attribute = actionOption.attribute;
   } catch (e: any) {
-    elementNodes.forEach(async (element) => await element.dispose());
+    if (elementNode) await elementNode.dispose();
     throw e;
   }
 
   try {
     // *** Start Browser context ***
-    return await elementNodes[0].evaluate(
+    return await elementNode.evaluate(
       (node, attribute, attributeNames) => {
         if (!attributeNames.includes(attribute as AttributesType)) {
           // Throw an error with a specific message so we can catch it outside the browser context and throw a BytebotError
@@ -145,7 +139,7 @@ export async function copyAttribute(
     }
     throw new BytebotError(e.message);
   } finally {
-    elementNodes.forEach(async (element) => await element.dispose());
+    if (elementNode) await elementNode.dispose();
   }
 }
 
@@ -161,16 +155,13 @@ export async function assignAttribute(
   page: Page
 ): Promise<void> {
   // Extract the element from the page according to the xpath
-  const elementNodes = await page.$x(action.xpath);
+  const elementNode = await page
+  .$("xpath/" + action.xpath);
 
   let parameter_attribute: string | undefined;
   let parameter_value: string | undefined;
   try {
-    // Validate the number of elements
-    if (elementNodes.length > 1) {
-      throw new BytebotMultipleElementsError(action.xpath);
-    }
-    if (elementNodes.length === 0) {
+    if (elementNode === null) {
       throw new BytebotNoElementError(action.xpath);
     }
 
@@ -182,16 +173,16 @@ export async function assignAttribute(
       throw new BytebotInvalidParametersError(action.type, "value");
     parameter_value = action.value;
   } catch (e: any) {
-    elementNodes.forEach(async (element) => await element.dispose());
+    if (elementNode) await elementNode.dispose();
     throw e;
   }
   try {
     if (!isAttribute(parameter_attribute))
       throw new BytebotInvalidAttributeError(parameter_attribute);
-    const element = elementNodes[0];
+    
     // Get the tag of the element
     const tagName = (
-      await element.evaluate((node) => (node as HTMLElement).tagName)
+      await elementNode.evaluate((node) => (node as HTMLElement).tagName)
     ).toLowerCase() as string;
     //console.log(`Assigning ${parameter_value} to ${parameter_attribute} of ${tagName}`)
     // Deal with input elements
@@ -199,31 +190,31 @@ export async function assignAttribute(
       tagName === "input" &&
       (parameter_attribute === "value" || parameter_attribute === "checked")
     ) {
-      const inputType = await element.evaluate((node) => {
+      const inputType = await elementNode.evaluate((node) => {
         const inputNode = node as HTMLInputElement;
         return inputNode.type;
       });
       switch (inputType) {
         case "checkbox":
-          const checked = await element.evaluate(
+          const checked = await elementNode.evaluate(
             (node) => (node as HTMLInputElement).checked
           );
           if (parameter_value === "true" && !checked) {
-            await element.evaluate((node) =>
+            await elementNode.evaluate((node) =>
               (node as HTMLInputElement).click()
             );
           } else if (parameter_value === "false" && checked) {
-            await element.evaluate((node) =>
+            await elementNode.evaluate((node) =>
               (node as HTMLInputElement).click()
             );
           }
           return;
         case "radio":
-          const radiochecked = await element.evaluate(
+          const radiochecked = await elementNode.evaluate(
             (node) => (node as HTMLInputElement).checked
           );
           if (parameter_value === "true" && !radiochecked) {
-            await element.evaluate((node) =>
+            await elementNode.evaluate((node) =>
               (node as HTMLInputElement).click()
             );
           } else if (parameter_value === "false" && radiochecked) {
@@ -243,7 +234,7 @@ export async function assignAttribute(
         case "url":
         case "week":
           //console.log(`Typing ${parameter_value} into ${parameter_attribute} of ${inputType}`)
-          await element.type(parameter_value, { delay: 100 });
+          await elementNode.type(parameter_value, { delay: 100 });
           return;
         default:
         // DO NOTHING
@@ -253,14 +244,14 @@ export async function assignAttribute(
     // Assign boolean attributes
     if (isBooleanAttribute(parameter_attribute)) {
       if (parameter_value === "true") {
-        elementNodes[0].evaluate(
+        elementNode.evaluate(
           (node, parameter_attribute) =>
             (node as HTMLElement).setAttribute(parameter_attribute, "true"),
           parameter_attribute
         );
         return;
       }
-      elementNodes[0].evaluate(
+      elementNode.evaluate(
         (node, parameter_attribute) =>
           (node as HTMLElement).removeAttribute(parameter_attribute),
         parameter_attribute
@@ -269,7 +260,7 @@ export async function assignAttribute(
     }
 
     // Assign any other attribute
-    await element.evaluate(
+    await elementNode.evaluate(
       (node, attribute, value) => {
         const inputNode = node as HTMLElement;
         inputNode.setAttribute(attribute, value);
@@ -285,7 +276,7 @@ export async function assignAttribute(
     }
     throw new BytebotError(e.message);
   } finally {
-    elementNodes.forEach(async (element) => await element.dispose());
+    if (elementNode) await elementNode.dispose();
   }
 }
 
@@ -318,15 +309,14 @@ async function getTableCellHandle(
 
   const attr = action.type === "CopyAttribute" ? action.attribute : undefined;
 
-  const node = await page.$x(action.xpath).then((elementNodes) => {
-    if (elementNodes.length > 1) {
-      throw new BytebotMultipleElementsError(action.xpath);
-    }
-    if (elementNodes.length === 0) {
+  const node = await page
+  .$("xpath/" + action.xpath)
+  .then((elementNode) => {
+    if (elementNode === null) {
       throw new BytebotNoElementError(action.xpath);
     }
     action.xpath;
-    return elementNodes[0];
+    return elementNode;
   });
   return {
     cellElement: node,

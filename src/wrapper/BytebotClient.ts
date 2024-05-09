@@ -13,6 +13,7 @@ import {
 import { BytebotGenerationError } from "./types/actionErrors";
 import { Logger } from "./Logger";
 import { createId } from "@paralleldrive/cuid2";
+import { rrwebScript } from "./rrwebScript";
 
 declare global {
   interface Window {
@@ -32,7 +33,7 @@ export declare namespace BytebotClient {
   }
 
   export interface PromptOptions {
-    executeActions?: boolean;
+    useCache?: boolean;
     parameters?: { [key: string]: any }; // To pass sensitive information securely
   }
 }
@@ -53,7 +54,7 @@ export class BytebotClient {
     });
   }
 
-  public startSesseion(): void {
+  public startSession(): void {
     this.sessionId = createId();
     this.logger.info("Starting session: " + this.sessionId);
   }
@@ -75,9 +76,9 @@ export class BytebotClient {
     }, scriptId);
 
     if (!scriptExists) {
-      // Inject the rrweb script from the CDN
+      // Inject the rrweb script directly from a string
       await page.addScriptTag({
-        url: "https://cdn.jsdelivr.net/npm/rrweb-snapshot@2.0.0-alpha.11/dist/rrweb-snapshot.min.js",
+        content: rrwebScript,
         id: scriptId,
       });
     }
@@ -105,6 +106,7 @@ export class BytebotClient {
       url,
       html,
       prompt,
+      ...(options?.useCache ? { useCache: options.useCache } : {}),
       // include the sessionId if it is set
       ...(this.sessionId ? { sessionId: this.sessionId } : {}),
     });
@@ -130,7 +132,8 @@ export class BytebotClient {
 
   public async extract(
     schema: Bytebot.ExtractSchema,
-    page: Page
+    page: Page,
+    options?: BytebotClient.PromptOptions
   ): Promise<[Bytebot.ExtractResponseAction] | []> {
     const { url, html } = await this.getPageData(page);
     this.logger.info("Generating actions");
@@ -139,6 +142,7 @@ export class BytebotClient {
       url,
       html,
       schema: JSON.stringify(schema, null, 2),
+      ...(options?.useCache ? { useCache: options.useCache } : {}),
       // include the sessionId if it is set
       ...(this.sessionId ? { batchId: this.sessionId } : {}),
     });
