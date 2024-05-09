@@ -14,5 +14,6 @@ export interface ActRequest {
     url: string;
     html: string;
     prompt: string;
+    useCache?: boolean;
     sessionId?: string;
 }

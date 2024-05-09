@@ -7,7 +7,7 @@ The Bytebot Node.js library provides access to the Bytebot API from JavaScript/T
 
 ## Requirements
 
-Bytebot requires Puppeteer version **21.9.0**.
+Bytebot requires Puppeteer version **21.9.0** or greater.
 
 ## API Docs
 
@@ -24,33 +24,56 @@ yarn add @bytebot/sdk
 ## Usage
 
 ```typescript
-import { BytebotClient } from '@bytebot/sdk';
-import puppeteer from 'puppeteer';
+import puppeteer from "puppeteer";
+import { BytebotClient, Table, Column, Text } from "@bytebot/sdk";
 
 const bytebot = new BytebotClient({
-  apiKey: 'BYTEBOT_API_KEY',
+    apiKey: "YOUR_API_KEY",
 });
+async function run() {
+    // Launch a browser and open a page
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
 
+    await page.goto("https://www.ycombinator.com/companies", {
+        waitUntil: "networkidle0",
+    });
 
-(async () => {
-  // Launch the browser
-  const browser = await puppeteer.launch();
+    // Act actions
+    console.log("Acting on the page");
+    const actActions = await bytebot.act("Click on the W23 filter", page);
 
-  // Create a page
-  const page = await browser.newPage();
+    // Print the actions returned by the Bytebot API
+    console.log("actActions", actActions);
 
-  // Go to your site
-  await page.goto('<URL>');
+    // Execute the actions
+    await bytebot.execute(actActions, page);
 
-  await bytebot.prompt("Extract the names and locations from the table", page);
+    // Extract actions
+    console.log("Extracting table data");
+    const extractActions = await bytebot.extract(
+        Table([
+            Column("Company Name", Text("The name of the company")),
+            Column("Company Description", Text("The description of the company")),
+        ]),
+        page
+    );
 
-  ...
+    // Print the actions returned by the Bytebot API
+    console.log("extractActions", JSON.stringify(extractActions, null, 2));
 
+    // Execute the actions
+    const result = await bytebot.execute(extractActions, page);
 
-})();
+    // Print the extracted table data
+    console.log("Extracted table data", result);
 
+    await browser.close();
+}
+
+run().catch(console.error);
 ```
 
-## Alpha status
+## Beta status
 
-This SDK is in alpha, and there will be breaking changes between versions without a major version update.
+This SDK is in beta, and there will be breaking changes between versions without a major version update.
