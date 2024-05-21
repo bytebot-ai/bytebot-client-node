@@ -47,20 +47,18 @@ export async function copyText(
   action: Bytebot.BrowserAction.CopyText,
   page: Page
 ): Promise<null | string> {
-  return page
-    .$("xpath/" + action.xpath)
-    .then(async (elementNode) => {
-      try {
-        if (elementNode === null) {
-          throw new BytebotNoElementError(action.xpath);
-        }
-        return await elementNode.evaluate((node) => {
-          return (node as HTMLElement).innerText ?? null;
-        });
-      } finally {
-        if (elementNode) await elementNode.dispose();
+  return page.$("xpath/" + action.xpath).then(async (elementNode) => {
+    try {
+      if (elementNode === null) {
+        throw new BytebotNoElementError(action.xpath);
       }
-    });
+      return await elementNode.evaluate((node) => {
+        return (node as HTMLElement).innerText ?? null;
+      });
+    } finally {
+      if (elementNode) await elementNode.dispose();
+    }
+  });
 }
 
 /**
@@ -73,9 +71,7 @@ export function click(
   action: Bytebot.BrowserAction.Click,
   page: Page
 ): Promise<void> {
-  return page
-  .$("xpath/" + action.xpath)
-  .then(async (elementNode) => {
+  return page.$("xpath/" + action.xpath).then(async (elementNode) => {
     try {
       if (elementNode === null) {
         throw new BytebotNoElementError(action.xpath);
@@ -100,8 +96,7 @@ export async function copyAttribute(
   page: Page
 ): Promise<null | string> {
   // Extract the element from the page according to the xpath
-  const elementNode = await page
-  .$("xpath/" + actionOption.xpath);
+  const elementNode = await page.$("xpath/" + actionOption.xpath);
 
   let parameter_attribute: string | undefined;
   try {
@@ -127,6 +122,19 @@ export async function copyAttribute(
           throw new Error(`Invalid Attribute`);
         }
         const inputNode = node as HTMLElement;
+
+        if (attribute === "href") {
+          let href = inputNode.getAttribute("href");
+          // Create a temporary anchor element to resolve the relative URL
+          if (href) {
+            const a = document.createElement("a");
+            a.href = href;
+            href = a.href; // This resolves the relative URL to an absolute URL
+            a.remove();
+          }
+          return href ?? null;
+        }
+
         return inputNode.getAttribute(attribute) ?? null;
       },
       parameter_attribute,
@@ -155,8 +163,7 @@ export async function assignAttribute(
   page: Page
 ): Promise<void> {
   // Extract the element from the page according to the xpath
-  const elementNode = await page
-  .$("xpath/" + action.xpath);
+  const elementNode = await page.$("xpath/" + action.xpath);
 
   let parameter_attribute: string | undefined;
   let parameter_value: string | undefined;
@@ -179,7 +186,7 @@ export async function assignAttribute(
   try {
     if (!isAttribute(parameter_attribute))
       throw new BytebotInvalidAttributeError(parameter_attribute);
-    
+
     // Get the tag of the element
     const tagName = (
       await elementNode.evaluate((node) => (node as HTMLElement).tagName)
@@ -309,9 +316,7 @@ async function getTableCellHandle(
 
   const attr = action.type === "CopyAttribute" ? action.attribute : undefined;
 
-  const node = await page
-  .$("xpath/" + action.xpath)
-  .then((elementNode) => {
+  const node = await page.$("xpath/" + action.xpath).then((elementNode) => {
     if (elementNode === null) {
       throw new BytebotNoElementError(action.xpath);
     }
