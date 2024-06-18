@@ -41,29 +41,32 @@ async function run() {
 
     // Act actions
     console.log("Acting on the page");
-    const actActions = await bytebot.act("Click on the W23 filter", page);
+    const actActions = await bytebot.puppeteer.act({
+        prompt: "Click on the W23 filter",
+        page,
+    });
 
     // Print the actions returned by the Bytebot API
     console.log("actActions", actActions);
 
     // Execute the actions
-    await bytebot.execute(actActions, page);
+    await bytebot.puppeteer.execute(actActions, page);
 
     // Extract actions
     console.log("Extracting table data");
-    const extractActions = await bytebot.extract(
-        Table([
+    const extractActions = await bytebot.puppeteer.extract({
+        schema: Table([
             Column("Company Name", Text("The name of the company")),
             Column("Company Description", Text("The description of the company")),
         ]),
-        page
-    );
+        page,
+    });
 
     // Print the actions returned by the Bytebot API
     console.log("extractActions", JSON.stringify(extractActions, null, 2));
 
     // Execute the actions
-    const result = await bytebot.execute(extractActions, page);
+    const result = await bytebot.puppeteer.execute(extractActions, page);
 
     // Print the extracted table data
     console.log("Extracted table data", result);

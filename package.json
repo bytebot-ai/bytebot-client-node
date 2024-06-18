@@ -1,6 +1,6 @@
 {
     "name": "@bytebot/sdk",
-    "version": "0.4.1",
+    "version": "0.9.0",
     "private": false,
     "repository": "https://github.com/bytebot-ai/bytebot-client-node",
     "license": "MIT",
@@ -12,11 +12,10 @@
         "prepack": "cp -rv dist/. ."
     },
     "dependencies": {
-        "@paralleldrive/cuid2": "^2.2.2",
         "@flatfile/cross-env-config": "^0.0.5",
+        "@paralleldrive/cuid2": "^2.2.2",
         "form-data": "4.0.0",
         "node-fetch": "2.7.0",
-        "puppeteer": "^21.9.0",
         "qs": "6.11.2",
         "url-join": "4.0.1"
     },
@@ -27,8 +26,5 @@
         "@types/url-join": "4.0.1",
         "prettier": "2.7.1",
         "typescript": "4.6.4"
-    },
-    "peerDependencies": {
-        "puppeteer": "^21.9.0"
     }
 }
