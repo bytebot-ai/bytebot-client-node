@@ -7,7 +7,7 @@ The Bytebot Node.js library provides access to the Bytebot API from JavaScript/T
 
 ## Requirements
 
-Bytebot requires Puppeteer version **21.9.0** or greater.
+Bytebot works with Puppeteer version **21.9.0** or greater, and Playwright version **1.44.0** or greater.
 
 ## API Docs
 
