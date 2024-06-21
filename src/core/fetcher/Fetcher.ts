@@ -77,7 +77,7 @@ async function fetcherImpl<R = unknown>(args: Fetcher.Args): Promise<APIResponse
 
     const makeRequest = async (): Promise<Response> => {
         const controller = new AbortController();
-        let abortId = undefined;
+        let abortId: NodeJS.Timeout | undefined = undefined;
         if (args.timeoutMs != null) {
             abortId = setTimeout(() => controller.abort(), args.timeoutMs);
         }
