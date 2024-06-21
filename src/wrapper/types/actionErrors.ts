@@ -17,14 +17,6 @@ export class BytebotNoElementError extends BytebotError {
   }
 }
 
-export class BytebotGenerationError extends BytebotError {
-  constructor(serverError: string) {
-    super({ message: `Error generating actions: ${serverError}` });
-    Object.setPrototypeOf(this, BytebotGenerationError.prototype);
-    this.name = "BytebotGenerationError";
-  }
-}
-
 export class BytebotInvalidAttributeError extends BytebotError {
   constructor(attribute: string) {
     super({ message: `Invalid attribute ${attribute}` });

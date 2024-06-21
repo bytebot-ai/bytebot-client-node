@@ -4,6 +4,7 @@
 
 import * as environments from "./environments";
 import * as core from "./core";
+import { Browsers } from "./api/resources/browsers/client/Client";
 import { Requests } from "./api/resources/requests/client/Client";
 
 export declare namespace BytebotClient {
@@ -20,6 +21,12 @@ export declare namespace BytebotClient {
 
 export class BytebotClient {
     constructor(protected readonly _options: BytebotClient.Options) {}
+
+    protected _browsers: Browsers | undefined;
+
+    public get browsers(): Browsers {
+        return (this._browsers ??= new Browsers(this._options));
+    }
 
     protected _requests: Requests | undefined;
 
