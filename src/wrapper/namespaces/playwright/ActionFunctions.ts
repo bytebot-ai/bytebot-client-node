@@ -117,14 +117,14 @@ export async function copyAttribute(
   try {
     // *** Start Browser context ***
     return await elementNode.evaluate(
-      (node: any, attribute: any, attributeNames: any) => {
-        if (!attributeNames.includes(attribute as AttributesType)) {
+      (node: any, params: any) => {
+        if (!params.attributeNames.includes(params.attribute as AttributesType)) {
           // Throw an error with a specific message so we can catch it outside the browser context and throw a BytebotError
           throw new Error(`Invalid Attribute`);
         }
         const inputNode = node as HTMLElement;
 
-        if (attribute === "href") {
+        if (params.attribute === "href") {
           let href = inputNode.getAttribute("href");
           // Create a temporary anchor element to resolve the relative URL
           if (href) {
@@ -136,10 +136,9 @@ export async function copyAttribute(
           return href ?? null;
         }
 
-        return inputNode.getAttribute(attribute) ?? null;
+        return inputNode.getAttribute(params.attribute) ?? null;
       },
-      parameter_attribute,
-      attributeNames
+      { attribute: parameter_attribute, attributeNames }
     );
     // *** End Browser context ***
   } catch (e: any) {
@@ -319,15 +318,13 @@ async function getTableCellHandle(
 
   let xp = action.xpath;
   if (action.type === "CopyText") xp = xp.replace(/\/text\(\)/g, "");
-  const node = await page
-    .$("xpath=" + xp)
-    .then((elementNode: any) => {
-      if (elementNode === null) {
-        throw new BytebotNoElementError(xp);
-      }
-      xp;
-      return elementNode;
-    });
+  const node = await page.$("xpath=" + xp).then((elementNode: any) => {
+    if (elementNode === null) {
+      throw new BytebotNoElementError(xp);
+    }
+    xp;
+    return elementNode;
+  });
   return {
     cellElement: node,
     name: cell.name,

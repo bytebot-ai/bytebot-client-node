@@ -10,6 +10,7 @@ import {
 } from "./ActionFunctions";
 import { BytebotGenerationError } from "../../errors";
 import { createId } from "@paralleldrive/cuid2";
+import { rrwebScript } from "./rrwebScript";
 
 declare global {
   interface Window {
@@ -18,6 +19,8 @@ declare global {
     };
   }
 }
+
+const PLAYWRIGHT_ACT_WAIT = 2000;
 
 export declare namespace BytebotPlaywright {
   export interface PromptOptions {
@@ -66,18 +69,19 @@ export class BytebotPlaywright {
   private async getPageData(page: any): Promise<{ url: string; html: string }> {
     const url = page.url();
 
-    // const scriptId = "rrweb-snapshot";
+    const scriptId = "rrweb-snapshot";
 
-    // const scriptExists = await page.evaluate((scriptId:any) => {
-    //   return !!document.getElementById(scriptId);
-    // }, scriptId);
+    const scriptExists = await page.evaluate((scriptId: any) => {
+      return !!document.getElementById(scriptId);
+    }, scriptId);
 
-    // FIXME: Using content works with Puppeteer but runs into CSP error with Playwright
-    await page.addScriptTag({
-      url: "https://cdn.jsdelivr.net/npm/rrweb-snapshot@2.0.0-alpha.11/dist/rrweb-snapshot.min.js",
-      // content: rrwebScript,
-    });
-
+    if (!scriptExists) {
+      await page.addScriptTag({
+        // url: "https://cdn.jsdelivr.net/npm/rrweb-snapshot@2.0.0-alpha.11/dist/rrweb-snapshot.min.js",
+        id: scriptId,
+        content: rrwebScript,
+      });
+    }
     // Wait for the script to load and initialize
     await page.waitForFunction(() => !!window.rrwebSnapshot);
 
@@ -169,6 +173,10 @@ export class BytebotPlaywright {
         } else if (action.type == Bytebot.BrowserActionType.AssignAttribute) {
           await assignAttribute(action, page);
         }
+
+        // After "act" actions we'd like to do page.waitForNetworkIdle() like with Puppeteer
+        // but Playwright doesn't have a built-in method for that
+        await page.waitForTimeout(PLAYWRIGHT_ACT_WAIT);
       }
     } else if (this.isExtractResponseActionArray(actions)) {
       const action = actions[0];
