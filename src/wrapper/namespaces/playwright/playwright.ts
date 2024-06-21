@@ -77,7 +77,6 @@ export class BytebotPlaywright {
 
     if (!scriptExists) {
       await page.addScriptTag({
-        // url: "https://cdn.jsdelivr.net/npm/rrweb-snapshot@2.0.0-alpha.11/dist/rrweb-snapshot.min.js",
         id: scriptId,
         content: rrwebScript,
       });

@@ -2,6 +2,7 @@
     "compilerOptions": {
         "extendedDiagnostics": true,
         "strict": true,
+        "strictNullChecks": false,
         "target": "ES6",
         "module": "CommonJS",
         "noImplicitAny": false,

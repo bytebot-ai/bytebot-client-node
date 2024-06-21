@@ -1,6 +1,6 @@
 {
     "name": "@bytebot/sdk",
-    "version": "0.9.0",
+    "version": "1.0.0",
     "private": false,
     "repository": "https://github.com/bytebot-ai/bytebot-client-node",
     "license": "MIT",

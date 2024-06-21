@@ -1,6 +1,5 @@
 import * as Bytebot from "../../../api";
 import { BytebotError } from "../../../errors/BytebotError";
-import { ElementHandle, Page } from "puppeteer";
 import {
   AttributesType,
   attributeNames,
@@ -10,7 +9,6 @@ import {
 import {
   BytebotInvalidAttributeError,
   BytebotInvalidParametersError,
-  BytebotMultipleElementsError,
   BytebotNoElementError,
 } from "../../types/actionErrors";
 
@@ -45,7 +43,7 @@ async function concatenatePromises<T>(promises: Promise<T>[]): Promise<T[]> {
  */
 export async function copyText(
   action: Bytebot.BrowserAction.CopyText,
-  page: Page
+  page: any
 ): Promise<null | string> {
   let xpath = action.xpath;
   if (xpath.endsWith("/text()")) {
@@ -73,7 +71,7 @@ export async function copyText(
  */
 export function click(
   action: Bytebot.BrowserAction.Click,
-  page: Page
+  page: any
 ): Promise<void> {
   let xpath = action.xpath;
   if (xpath.endsWith("/text()")) {
@@ -101,7 +99,7 @@ export function click(
  */
 export async function copyAttribute(
   actionOption: Bytebot.BrowserAction.CopyAttribute,
-  page: Page
+  page: any
 ): Promise<null | string> {
   // Extract the element from the page according to the xpath
   const elementNode = await page.$("xpath/" + actionOption.xpath);
@@ -168,7 +166,7 @@ export async function copyAttribute(
  */
 export async function assignAttribute(
   action: Bytebot.BrowserAction.AssignAttribute,
-  page: Page
+  page: any
 ): Promise<void> {
   // Extract the element from the page according to the xpath
   const elementNode = await page.$("xpath/" + action.xpath);
@@ -295,7 +293,7 @@ export async function assignAttribute(
 
 /** Private type used to temporarily hold the content of a table cell */
 type ExtractCell = {
-  cellElement: ElementHandle<Node>;
+  cellElement: any; // ElementHandle<Node>;
   name: string;
   actionType: string;
   attribute?: string;
@@ -304,7 +302,7 @@ type ExtractCell = {
 /** Private function that validates the inputs of a cell and extracts the element from its xpath */
 async function getTableCellHandle(
   cell: Bytebot.ExtractTableColumnBrowserAction,
-  page: Page
+  page: any
 ): Promise<ExtractCell> {
   const action = cell.action;
   // Validate the parameters of each column
@@ -345,7 +343,7 @@ async function getTableCellHandle(
  */
 export async function extractTable(
   actionOption: Bytebot.BrowserAction.ExtractTable,
-  page: Page
+  page: any
 ): Promise<null | string | Record<string, string | null>[]> {
   if (!actionOption.rows)
     throw new BytebotInvalidParametersError(actionOption.type, "rows");
