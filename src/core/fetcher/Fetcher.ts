@@ -44,7 +44,7 @@ export declare namespace Fetcher {
 
 const INITIAL_RETRY_DELAY = 1;
 const MAX_RETRY_DELAY = 60;
-const DEFAULT_MAX_RETRIES = 0;
+const DEFAULT_MAX_RETRIES = 2;
 
 async function fetcherImpl<R = unknown>(args: Fetcher.Args): Promise<APIResponse<R, Fetcher.Error>> {
     const headers: Record<string, string> = {};
@@ -77,7 +77,7 @@ async function fetcherImpl<R = unknown>(args: Fetcher.Args): Promise<APIResponse
 
     const makeRequest = async (): Promise<Response> => {
         const controller = new AbortController();
-        let abortId: NodeJS.Timeout | undefined = undefined;
+        let abortId = undefined;
         if (args.timeoutMs != null) {
             abortId = setTimeout(() => controller.abort(), args.timeoutMs);
         }

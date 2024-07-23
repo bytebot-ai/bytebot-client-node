@@ -14,6 +14,5 @@ export interface ExtractRequest {
     url: string;
     html: string;
     schema: string;
-    useCache?: boolean;
     sessionId?: string;
 }

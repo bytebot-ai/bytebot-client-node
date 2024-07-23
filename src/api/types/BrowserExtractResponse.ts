@@ -8,5 +8,6 @@ export interface BrowserExtractResponse {
     data?: Bytebot.BrowserExtractResponseData;
     pages?: Bytebot.BrowserPage[];
     action?: Bytebot.BrowserExtractResponseAction;
+    browserUrl?: string;
     error?: string;
 }

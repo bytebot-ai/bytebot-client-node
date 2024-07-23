@@ -7,5 +7,6 @@ import * as Bytebot from "..";
 export interface BrowserActResponse {
     pages?: Bytebot.BrowserPage[];
     actions?: Bytebot.BrowserActResponseActionsItem[];
+    browserUrl?: string;
     error?: string;
 }

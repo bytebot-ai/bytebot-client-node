@@ -4,5 +4,6 @@
 
 export interface BrowserOpenResponse {
     sessionId: string;
+    browserUrl?: string;
     error?: string;
 }
