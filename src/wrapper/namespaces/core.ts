@@ -11,20 +11,21 @@ export declare namespace BytebotCore {
   }
 
   export interface PromptOptions {
-    useCache?: boolean;
     parameters?: { [key: string]: any }; // To pass sensitive information securely
   }
 
   export interface CoreActOptions {
+    sessionId?: string;
     prompt: string;
+    formValues?: Bytebot.FormValue[];
     page: BytebotCore.PageData;
     options?: BytebotCore.PromptOptions;
   }
 
   export interface CoreExtractOptions {
+    sessionId?: string;
     schema: Bytebot.ExtractSchema;
     page: BytebotCore.PageData;
-    options?: BytebotCore.PromptOptions;
   }
 }
 
@@ -49,7 +50,9 @@ export class BytebotCore {
   }
 
   public async act({
+    sessionId,
     prompt,
+    formValues,
     page,
     options,
   }: BytebotCore.CoreActOptions): Promise<Bytebot.ActResponseActionsItem[]> {
@@ -57,12 +60,11 @@ export class BytebotCore {
     this.logger.info("Generating actions");
 
     const response = await this._bytebotApiClient.requests.act({
+      sessionId: sessionId ?? this.sessionId ?? undefined,
       url,
       html,
       prompt,
-      ...(options?.useCache ? { useCache: options.useCache } : {}),
-      // include the sessionId if it is set
-      ...(this.sessionId ? { sessionId: this.sessionId } : {}),
+      formValues: formValues ?? [],
     });
 
     if (response.error) {
@@ -85,9 +87,9 @@ export class BytebotCore {
   }
 
   public async extract({
+    sessionId,
     schema,
     page,
-    options,
   }: BytebotCore.CoreExtractOptions): Promise<
     [Bytebot.ExtractResponseAction] | []
   > {
@@ -95,12 +97,10 @@ export class BytebotCore {
     this.logger.info("Generating actions");
 
     const response = await this._bytebotApiClient.requests.extract({
+      sessionId: sessionId ?? this.sessionId ?? undefined,
       url,
       html,
       schema: JSON.stringify(schema, null, 2),
-      ...(options?.useCache ? { useCache: options.useCache } : {}),
-      // include the sessionId if it is set
-      ...(this.sessionId ? { batchId: this.sessionId } : {}),
     });
 
     const actions: [Bytebot.ExtractResponseAction] | [] = response.action

@@ -20,24 +20,25 @@ declare global {
   }
 }
 
-const PLAYWRIGHT_ACT_WAIT = 2000;
+const PLAYWRIGHT_ACT_WAIT = 5000;
 
 export declare namespace BytebotPlaywright {
   export interface PromptOptions {
-    useCache?: boolean;
     parameters?: { [key: string]: any }; // To pass sensitive information securely
   }
 
   export interface PlaywrightActOptions {
+    sessionId?: string;
     prompt: string;
+    formValues?: Bytebot.FormValue[];
     page: any;
     options?: BytebotPlaywright.PromptOptions;
   }
 
   export interface PlaywrightExtractOptions {
+    sessionId?: string;
     schema: Bytebot.ExtractSchema;
     page: any;
-    options?: BytebotPlaywright.PromptOptions;
   }
 
   export interface PlaywrightExecuteOptions {
@@ -69,18 +70,11 @@ export class BytebotPlaywright {
   private async getPageData(page: any): Promise<{ url: string; html: string }> {
     const url = page.url();
 
-    const scriptId = "rrweb-snapshot";
+    await page.evaluate((script) => {
+      const defineFunction = new Function(script);
+      defineFunction();
+    }, rrwebScript);
 
-    const scriptExists = await page.evaluate((scriptId: any) => {
-      return !!document.getElementById(scriptId);
-    }, scriptId);
-
-    if (!scriptExists) {
-      await page.addScriptTag({
-        id: scriptId,
-        content: rrwebScript,
-      });
-    }
     // Wait for the script to load and initialize
     await page.waitForFunction(() => !!window.rrwebSnapshot);
 
@@ -93,7 +87,9 @@ export class BytebotPlaywright {
   }
 
   public async act({
+    sessionId,
     prompt,
+    formValues,
     page,
     options,
   }: BytebotPlaywright.PlaywrightActOptions): Promise<
@@ -103,12 +99,11 @@ export class BytebotPlaywright {
     this.logger.info("Generating actions");
 
     const response = await this._bytebotApiClient.requests.act({
+      sessionId: sessionId ?? this.sessionId ?? undefined,
       url,
       html,
       prompt,
-      ...(options?.useCache ? { useCache: options.useCache } : {}),
-      // include the sessionId if it is set
-      ...(this.sessionId ? { sessionId: this.sessionId } : {}),
+      formValues,
     });
 
     if (response.error) {
@@ -131,9 +126,9 @@ export class BytebotPlaywright {
   }
 
   public async extract({
+    sessionId,
     schema,
     page,
-    options,
   }: BytebotPlaywright.PlaywrightExtractOptions): Promise<
     [Bytebot.ExtractResponseAction] | []
   > {
@@ -141,12 +136,10 @@ export class BytebotPlaywright {
     this.logger.info("Generating actions");
 
     const response = await this._bytebotApiClient.requests.extract({
+      sessionId: sessionId ?? this.sessionId ?? undefined,
       url,
       html,
       schema: JSON.stringify(schema, null, 2),
-      ...(options?.useCache ? { useCache: options.useCache } : {}),
-      // include the sessionId if it is set
-      ...(this.sessionId ? { batchId: this.sessionId } : {}),
     });
 
     const actions: [Bytebot.ExtractResponseAction] | [] = response.action
