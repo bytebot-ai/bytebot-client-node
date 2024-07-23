@@ -19,24 +19,25 @@ declare global {
   }
 }
 
-const PUPPETEER_ACT_TIMEOUT = 3000;
+const PUPPETEER_ACT_TIMEOUT = 5000;
 
 export declare namespace BytebotPuppeteer {
   export interface PromptOptions {
-    useCache?: boolean;
     parameters?: { [key: string]: any }; // To pass sensitive information securely
   }
 
   export interface PuppeteerActOptions {
+    sessionId?: string;
     prompt: string;
+    formValues?: Bytebot.FormValue[];
     page: any;
     options?: BytebotPuppeteer.PromptOptions;
   }
 
   export interface PuppeteerExtractOptions {
+    sessionId?: string;
     schema: Bytebot.ExtractSchema;
     page: any;
-    options?: BytebotPuppeteer.PromptOptions;
   }
 
   export interface PuppeteerExecuteOptions {
@@ -97,7 +98,9 @@ export class BytebotPuppeteer {
   }
 
   public async act({
+    sessionId,
     prompt,
+    formValues,
     page,
     options,
   }: BytebotPuppeteer.PuppeteerActOptions): Promise<
@@ -107,12 +110,11 @@ export class BytebotPuppeteer {
     this.logger.info("Generating actions");
 
     const response = await this._bytebotApiClient.requests.act({
+      sessionId: sessionId ?? this.sessionId ?? undefined,
       url,
       html,
       prompt,
-      ...(options?.useCache ? { useCache: options.useCache } : {}),
-      // include the sessionId if it is set
-      ...(this.sessionId ? { sessionId: this.sessionId } : {}),
+      formValues,
     });
 
     if (response.error) {
@@ -135,9 +137,9 @@ export class BytebotPuppeteer {
   }
 
   public async extract({
+    sessionId,
     schema,
     page,
-    options,
   }: BytebotPuppeteer.PuppeteerExtractOptions): Promise<
     [Bytebot.ExtractResponseAction] | []
   > {
@@ -145,12 +147,10 @@ export class BytebotPuppeteer {
     this.logger.info("Generating actions");
 
     const response = await this._bytebotApiClient.requests.extract({
+      sessionId: sessionId ?? this.sessionId ?? undefined,
       url,
       html,
       schema: JSON.stringify(schema, null, 2),
-      ...(options?.useCache ? { useCache: options.useCache } : {}),
-      // include the sessionId if it is set
-      ...(this.sessionId ? { batchId: this.sessionId } : {}),
     });
 
     const actions: [Bytebot.ExtractResponseAction] | [] = response.action

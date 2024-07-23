@@ -5,6 +5,7 @@ export declare namespace BytebotBrowser {
   export interface BrowserActOptions {
     sessionId: string;
     prompt: string;
+    formValues?: Bytebot.FormValue[];
     url?: string;
     pageId?: string;
   }
@@ -37,12 +38,14 @@ export class BytebotBrowser {
   public async act({
     sessionId,
     prompt,
+    formValues,
     url,
     pageId,
   }: BytebotBrowser.BrowserActOptions): Promise<Bytebot.BrowserActResponse> {
     const response = await this._bytebotApiClient.browsers.act({
       sessionId,
       prompt,
+      formValues: formValues ?? [],
       ...(url ? { url } : {}),
       ...(pageId ? { pageId } : {}),
     });

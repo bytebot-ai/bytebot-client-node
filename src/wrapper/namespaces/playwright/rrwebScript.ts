@@ -1685,4 +1685,5 @@ var rrwebSnapshot = (function (e) {
   );
 })({});
 //# sourceMappingURL=rrweb-snapshot.min.js.map
+window.rrwebSnapshot = rrwebSnapshot;
 `;

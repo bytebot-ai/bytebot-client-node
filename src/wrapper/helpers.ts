@@ -1,4 +1,4 @@
-import { ExtractSchema, ExtractSchemaType, TableExtractColumn } from "api";
+import { ExtractSchema, TableExtractColumn, FormValue } from "api";
 
 export function Text(description: string): ExtractSchema.Text {
   return {
@@ -28,5 +28,12 @@ export function Column(
   return {
     name,
     schema,
+  };
+}
+
+export function FormValue(value: string, description: string): FormValue {
+  return {
+    value,
+    description,
   };
 }
