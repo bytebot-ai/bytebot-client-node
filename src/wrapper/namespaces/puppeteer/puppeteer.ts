@@ -44,6 +44,16 @@ export declare namespace BytebotPuppeteer {
     actions: Bytebot.ActResponseActionsItem[] | [Bytebot.ExtractResponseAction];
     page: any;
   }
+
+  export interface PuppeteerActResponse {
+    requestId: string;
+    actions: Bytebot.ActResponseActionsItem[]
+  }
+
+  export interface PuppeteerExtractResponse {
+    requestId: string;
+    actions: [Bytebot.ExtractResponseAction] | []
+  }
 }
 
 export class BytebotPuppeteer {
@@ -104,7 +114,7 @@ export class BytebotPuppeteer {
     page,
     options,
   }: BytebotPuppeteer.PuppeteerActOptions): Promise<
-    Bytebot.ActResponseActionsItem[]
+    BytebotPuppeteer.PuppeteerActResponse
   > {
     const { url, html } = await this.getPageData(page);
     this.logger.info("Generating actions");
@@ -133,7 +143,10 @@ export class BytebotPuppeteer {
       }
     }
 
-    return actions;
+    return {
+      requestId: response.requestId,
+      actions,
+    };
   }
 
   public async extract({
@@ -141,7 +154,7 @@ export class BytebotPuppeteer {
     schema,
     page,
   }: BytebotPuppeteer.PuppeteerExtractOptions): Promise<
-    [Bytebot.ExtractResponseAction] | []
+    BytebotPuppeteer.PuppeteerExtractResponse
   > {
     const { url, html } = await this.getPageData(page);
     this.logger.info("Generating actions");
@@ -156,7 +169,11 @@ export class BytebotPuppeteer {
     const actions: [Bytebot.ExtractResponseAction] | [] = response.action
       ? [response.action]
       : [];
-    return actions;
+    
+    return {
+      requestId: response.requestId,
+      actions,
+    };
   }
 
   public async execute({
