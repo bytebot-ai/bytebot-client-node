@@ -5,6 +5,7 @@
 import * as Bytebot from "..";
 
 export interface ExtractResponse {
+    requestId?: string;
     action?: Bytebot.ExtractResponseAction;
     error?: string;
 }
