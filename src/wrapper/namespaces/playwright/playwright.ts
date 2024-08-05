@@ -45,6 +45,16 @@ export declare namespace BytebotPlaywright {
     actions: Bytebot.ActResponseActionsItem[] | [Bytebot.ExtractResponseAction];
     page: any;
   }
+
+  export interface PlaywrightActResponse {
+    requestId: string;
+    actions: Bytebot.ActResponseActionsItem[]
+  }
+
+  export interface PlaywrightExtractResponse {
+    requestId: string;
+    actions: [Bytebot.ExtractResponseAction] | []
+  }
 }
 
 export class BytebotPlaywright {
@@ -93,7 +103,7 @@ export class BytebotPlaywright {
     page,
     options,
   }: BytebotPlaywright.PlaywrightActOptions): Promise<
-    Bytebot.ActResponseActionsItem[]
+    BytebotPlaywright.PlaywrightActResponse
   > {
     const { url, html } = await this.getPageData(page);
     this.logger.info("Generating actions");
@@ -122,7 +132,10 @@ export class BytebotPlaywright {
       }
     }
 
-    return actions;
+    return {
+      requestId: response.requestId,
+      actions,
+    };
   }
 
   public async extract({
@@ -130,7 +143,7 @@ export class BytebotPlaywright {
     schema,
     page,
   }: BytebotPlaywright.PlaywrightExtractOptions): Promise<
-    [Bytebot.ExtractResponseAction] | []
+    BytebotPlaywright.PlaywrightExtractResponse
   > {
     const { url, html } = await this.getPageData(page);
     this.logger.info("Generating actions");
@@ -145,7 +158,11 @@ export class BytebotPlaywright {
     const actions: [Bytebot.ExtractResponseAction] | [] = response.action
       ? [response.action]
       : [];
-    return actions;
+    
+    return {
+      requestId: response.requestId,
+      actions,
+    };
   }
 
   public async execute({

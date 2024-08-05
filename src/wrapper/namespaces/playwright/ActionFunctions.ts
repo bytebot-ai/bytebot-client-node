@@ -13,25 +13,6 @@ import {
   BytebotNoElementError,
 } from "../../types/actionErrors";
 
-// ***************************************
-// *** Helper functions (not exported) ***
-// ***************************************
-
-/** Turn an array of promises into a promise of an array. The promises are executed sequentially, NOT in parallel like Promise.all*/
-async function concatenatePromises<T>(promises: Promise<T>[]): Promise<T[]> {
-  if (promises.length === 0) {
-    return Promise.resolve([]);
-  }
-  if (promises.length === 1) {
-    const prom = promises[0];
-    return prom.then((res) => [res]);
-  }
-  const [first, ...rest] = promises;
-  return first.then((res_1) =>
-    concatenatePromises(rest).then((res2) => [res_1, ...res2])
-  );
-}
-
 // ************************
 // *** Action functions ***
 // ************************
@@ -118,7 +99,9 @@ export async function copyAttribute(
     // *** Start Browser context ***
     return await elementNode.evaluate(
       (node: any, params: any) => {
-        if (!params.attributeNames.includes(params.attribute as AttributesType)) {
+        if (
+          !params.attributeNames.includes(params.attribute as AttributesType)
+        ) {
           // Throw an error with a specific message so we can catch it outside the browser context and throw a BytebotError
           throw new Error(`Invalid Attribute`);
         }
@@ -349,15 +332,19 @@ export async function extractTable(
 
   let rows: ExtractCell[][] = [];
   try {
-    // convert parameters.rows to an array of arrays of ExtractColumn objects
-    rows = await concatenatePromises(
-      actionOption.rows.map(
-        async (row) =>
-          await concatenatePromises(
-            row.map(async (column) => getTableCellHandle(column, page))
-          )
-      )
-    );
+    let rowindex = -1;
+    let columnindex = -1;
+    for(const row of actionOption.rows){
+      rowindex++;
+      columnindex = -1;
+      for(const col of row){
+        columnindex++;
+        const result = await getTableCellHandle(col, page);
+        if(!rows[rowindex]) rows[rowindex] = [];
+        rows[rowindex][columnindex] = result;
+      }
+    }
+    
   } catch (e: any) {
     rows.forEach(async (row) =>
       row.forEach(async (column) => await column.cellElement.dispose())
